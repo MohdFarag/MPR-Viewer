@@ -1,2 +1,2 @@
-# MPR-Viewer
+# MPR Viewer
 Multiplanar reconstruction (MPR) program.
