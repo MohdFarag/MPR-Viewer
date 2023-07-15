@@ -40,8 +40,10 @@ OrthoViewer::OrthoViewer(QWidget* p)
   imageWindowLevel->UpdateWholeExtent();
 
   imageMapToColors = vtkImageMapToColors::New();
+
   imageMapToColors->SetOutputFormatToRGBA();
   imageMapToColors->SetInput(imageWindowLevel->GetOutput());
+  
   grayscaleLut = vtkLookupTable::New();
   grayscaleLut->SetNumberOfTableValues(256);
   grayscaleLut->SetTableRange(0, 255);
