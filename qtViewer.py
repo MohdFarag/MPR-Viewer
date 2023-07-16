@@ -3,6 +3,38 @@ from OrthoViewer import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+import time
+
+class Worker(QObject):    
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+    
+    def __init__(self, slider:QSlider):
+        super().__init__()
+        self.slider = slider
+        self._isRunning = True
+
+    def run(self):
+        """Long-running task."""
+        if not self._isRunning :
+            self._isRunning = True
+
+        i = self.slider.value()
+        slider_max = self.slider.maximum()
+        while i <= slider_max:
+            if self._isRunning:
+                self.progress.emit(i)
+                time.sleep(0.0001)
+            else:
+                break
+            
+            i += 1
+
+        self.slider.setValue(i)
+        self.finished.emit()
+        
+    def pause(self):
+        self._isRunning = False
 
 class QtViewer(QWidget):
 
@@ -11,11 +43,24 @@ class QtViewer(QWidget):
 
         # Properties
         self.label = label
+        self.orientation = orientation
+        self.status = False
         
+        # UI
+        self._init_UI()
+        
+        ## Thread
+        self.thread = QThread()
+        self.worker = Worker(self.slider)
+
+        # Connect
+        self.connect()
+
+    def _init_UI(self):
         # PyQt Stuff
         ## Render Viewer
-        self.orthoViewer = OrthoViewer(orientation)
-
+        self.orthoViewer = OrthoViewer(self.label, self.orientation)
+        
         ## Slider
         self.slider = QSlider(Qt.Vertical)
         self.slider.setSingleStep(1)
@@ -24,14 +69,27 @@ class QtViewer(QWidget):
         
         ## Buttons
         self.buttonsLayout = QHBoxLayout()
-        self.playPause_button = QPushButton("play")
-        self.prev_button = QPushButton("previous")
-        self.stop_button = QPushButton("stop")
-        self.next_button = QPushButton("next")
-        self.buttonsLayout.addWidget(self.playPause_button)
-        self.buttonsLayout.addWidget(self.prev_button)
-        self.buttonsLayout.addWidget(self.stop_button)
-        self.buttonsLayout.addWidget(self.next_button)
+        
+        self.prevBtn = QPushButton()
+        self.prevBtn.setIcon(QIcon("./assets/decrease.svg"))
+        self.prevBtn.setStyleSheet("font-size:15px; border-radius: 6px;border: 1px solid rgba(27, 31, 35, 0.15);padding: 5px 15px; background: black")
+        self.prevBtn.setDisabled(True)
+        
+        self.playBtn = QPushButton()
+        self.playBtn.setIcon(QIcon("./assets/play.ico"))
+        self.playBtn.setStyleSheet("font-size:15px; border-radius: 6px;border: 1px solid rgba(27, 31, 35, 0.15);padding: 5px 15px;")
+        self.playBtn.setDisabled(True)
+        
+        self.nextBtn = QPushButton()
+        self.nextBtn.setIcon(QIcon("./assets/increase.svg"))
+        self.nextBtn.setStyleSheet("font-size:15px; border-radius: 6px;border: 1px solid rgba(27, 31, 35, 0.15);padding: 5px 15px; background: black")
+        self.nextBtn.setDisabled(True)
+        
+        self.buttonsLayout.addSpacerItem(QSpacerItem(80, 10))
+        self.buttonsLayout.addWidget(self.prevBtn,4)
+        self.buttonsLayout.addWidget(self.playBtn,5)
+        self.buttonsLayout.addWidget(self.nextBtn,4)
+        self.buttonsLayout.addSpacerItem(QSpacerItem(80, 10))
         
         # Set up the layouts
         mainLayout = QVBoxLayout()
@@ -41,19 +99,14 @@ class QtViewer(QWidget):
         mainLayout.addLayout(topLayout)
         mainLayout.addLayout(self.buttonsLayout)
         self.setLayout(mainLayout)
-        
-        self.connect()
 
     def connect(self):
         # Connect slider signals to slice update slots
         self.slider.valueChanged.connect(self.update_slice)
         
         # Connect buttons to slots
-        # self.playPause_button.clicked.connect(lambda: self.playSlices(0))        
-        # self.prev_button.clicked.connect(lambda: self.playSlices(0))        
-        # self.stop_button.clicked.connect(lambda: self.worker.stop())
-        # self.next_button.clicked.connect(lambda: self.worker.stop())
-    
+        self.playBtn.clicked.connect(self.playPauseBtn)
+
     def update_slice(self, slice_index):
         self.orthoViewer.set_slice(slice_index)
         
@@ -68,10 +121,58 @@ class QtViewer(QWidget):
         self.orthoViewer.connect_on_data(path)
     
     def display_data(self):
+        # Settings of the button
+        self.prevBtn.setEnabled(True)
+        self.playBtn.setEnabled(True)
+        self.nextBtn.setEnabled(True)
+        
         # Settings of the slider
         self.slider.setEnabled(True)
         self.slider.setMaximum(self.orthoViewer.max_slice)
         self.slider.setMinimum(self.orthoViewer.min_slice)
         self.slider.setValue(self.orthoViewer.current_slice)
+        
         # Display the data
         self.orthoViewer.display()
+        
+    def playSlices(self):
+        self.thread = QThread()
+        self.worker = Worker(self.slider)
+        self.status = True
+        
+        # Play Button icon
+        self.playBtn.setIcon(QIcon("./assets/pause.ico"))
+                
+        # Final resets
+        # Move worker to the thread
+        self.worker.moveToThread(self.thread)
+        
+        # Connect signals and slots
+        self.thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+        self.worker.progress.connect(self.update_slice)
+        
+        # Start the thread
+        self.thread.start()
+        self.slider.setHidden(True)
+        self.thread.finished.connect(
+            lambda: self.slider.setHidden(False)
+        )
+        self.thread.finished.connect(
+            self.pauseSlices
+        )
+
+    def pauseSlices(self):
+        self.playBtn.setIcon(QIcon("./assets/play.ico"))
+        self.worker.pause()
+        self.status = False
+        
+    def playPauseBtn(self):
+        if self.status == False:
+            self.playSlices()
+            print("شغال")
+        else:
+            self.pauseSlices()
+            print("مش شغال")

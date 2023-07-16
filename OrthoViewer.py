@@ -13,15 +13,16 @@ SLICE_ORIENTATION_ORTHO = 3
 
 class OrthoViewer(QVTKRenderWindowInteractor):
 
-    def __init__(self, orientation):
+    def __init__(self, label, orientation):
         super(OrthoViewer, self).__init__()
  
          # Properties
         self.orientation = orientation
+        self.label = label
         self.current_slice = 0
         self.max_slice = 0
         self.min_slice = 0
-   
+
         # Vtk Stuff        
         ## Reader
         self.reader = vtkMetaImageReader() 
@@ -35,18 +36,25 @@ class OrthoViewer(QVTKRenderWindowInteractor):
         self.segmentationLabelImage = vtkImageMapToColors()
         self.segmentationLabelLookupTable = vtkLookupTable()
         self.imageBlender = vtkImageBlend()
-        self.vtkImageReslice = vtkImageReslice()
-        self.vtkImageActor = vtkImageActor()
-        self.vtkTextActor = vtkTextActor()        
-        self.vtkTextActor.SetPosition(5, 5)
-        L, W, x, y, z = 50.0, 100.0, 0.0, 0.0, 0.0
-        text = f"L/W: {L}/{W} | (x,y,z): ({x}, {y}, {z})"
-        self.vtkTextActor.SetInput(text)
+        self.imageReslice = vtkImageReslice()
+        self.imageActor = vtkImageActor()
+        
+        self.textActor1 = vtkTextActor()
+        self.textActor1.SetPosition(5, 25)
+        x, y, z = 0.0, 0.0, 0.0
+        text = f"(x,y,z): ({x}, {y}, {z})"
+        self.textActor1.SetInput(text)
+        
+        self.textActor2 = vtkTextActor()        
+        self.textActor2.SetPosition(5, 5)
+        text = self.label
+        self.textActor2.SetInput(text)
         
         ## Renderer
         self.renderer = vtkRenderer()
         self.renderer.SetBackground(0, 0, 0)
-        self.renderer.AddActor2D(self.vtkTextActor)
+        self.renderer.AddActor2D(self.textActor1)
+        self.renderer.AddActor2D(self.textActor2)
         
         ## Render Window
         self.renderWindow = self.GetRenderWindow()
@@ -62,14 +70,13 @@ class OrthoViewer(QVTKRenderWindowInteractor):
         self.renderWindowInteractor.SetInteractorStyle(self.interactorStyleImage)
 
         self.set_orientation_index(self.orientation) 
-        self.initialize()
                  
     def closeEvent(self, QCloseEvent):
         super().closeEvent(QCloseEvent)
         self.Finalize()
     
-    def initialize(self):
-        self.reader.SetFileName("./temp/out.mhd")
+    def initialize(self, path):
+        self.reader.SetFileName(path)
         self.reader.UpdateWholeExtent()
         slicesRange = self.reader.GetOutput().GetScalarRange()
 
@@ -132,56 +139,54 @@ class OrthoViewer(QVTKRenderWindowInteractor):
         # self.interactorStyleImage.AddObserver(vtkCommand.StartWindowLevelEvent, self.fun3)
         self.interactorStyleImage.AddObserver(vtkCommand.SelectionChangedEvent, self.fun4)
         
-        self.vtkImageReslice.SetInputData(self.imageBlender.GetOutput())
-        self.vtkImageReslice.SetOutputDimensionality(2)
-        self.vtkImageReslice.SetInterpolationModeToLinear()
-        self.vtkImageReslice.UpdateWholeExtent()
+        # Reslice
+        self.imageReslice.SetInputData(self.imageBlender.GetOutput())
+        self.imageReslice.SetOutputDimensionality(2)
+        self.imageReslice.SetInterpolationModeToLinear()
+        self.imageReslice.UpdateWholeExtent()
         
         if self.orientation == SLICE_ORIENTATION_ORTHO:
-            self.vtkImageActor.SetInputData(self.vtkImageReslice.GetOutput())
-            self.vtkImageActor.SetUserMatrix(self.vtkImageReslice.GetResliceAxes())
-            self.renderer.AddActor(self.vtkImageActor)
+            self.imageActor.SetInputData(self.imageReslice.GetOutput())
+            self.imageActor.SetUserMatrix(self.imageReslice.GetResliceAxes())
         else:
-            self.vtkImageActor.SetInputData(self.vtkImageReslice.GetOutput())
-            self.renderer.AddActor(self.vtkImageActor)
+            self.imageActor.SetInputData(self.imageReslice.GetOutput())
+            
+        self.renderer.AddActor(self.imageActor)
         
     def connect_on_data(self, path:str):
-        # Set file name
-        self.reader.SetFileName(path)
-        self.reader.UpdateWholeExtent()
-        slicesRange = self.reader.GetOutput().GetScalarRange()
+        # Set initializations
+        self.initialize(path)
 
-        # Filter the data
-        ## Shift and scale the data
-        self.imageShiftScale.SetShift(-slicesRange[0])
-        self.imageShiftScale.SetScale(255.0/(slicesRange[1]-slicesRange[0]))
-        self.imageShiftScale.UpdateWholeExtent()
-
-        ## Set the window and level
-        self.imageWindowLevel.SetWindow(100.0)
-        self.imageWindowLevel.SetLevel(50.0)
-        self.imageWindowLevel.UpdateWholeExtent()
-
+        self.renderer.ResetCamera()
         # Set the slice range
-        self.min_slice = 0
-        self.max_slice = 255
-
-    def set_slice(self, slice_index):
+        if self.orientation == SLICE_ORIENTATION_YZ:
+            self.min_slice = int(self.reader.GetOutput().GetBounds()[4])
+            self.max_slice = int(self.reader.GetOutput().GetBounds()[5])
+        elif self.orientation == SLICE_ORIENTATION_XZ:
+            self.min_slice = int(self.reader.GetOutput().GetBounds()[2])
+            self.max_slice = int(self.reader.GetOutput().GetBounds()[3])
+        elif self.orientation == SLICE_ORIENTATION_XY:
+            self.min_slice = int(self.reader.GetOutput().GetBounds()[0])
+            self.max_slice = int(self.reader.GetOutput().GetBounds()[1])
+        else:
+            self.min_slice = int(self.reader.GetOutput().GetBounds()[0])
+            self.max_slice = int(self.reader.GetOutput().GetBounds()[0])
+                
+    def set_slice(self, slice_index):       
         self.current_slice = slice_index
 
-    def fun1(self, obj, event):
-        print("fun1")
-    
-    def fun2(self, obj, event):
-        print("fun2")
-    
-    def fun3(self, obj, event):
-        print("fun3")
-    
-    def fun4(self, obj, event):
-        print("fun4")
-    
-        
+        if self.orientation == SLICE_ORIENTATION_YZ:
+            self.imageReslice.SetResliceAxesOrigin(0, 0, slice_index)
+        elif self.orientation == SLICE_ORIENTATION_XZ:
+            self.imageReslice.SetResliceAxesOrigin(slice_index, 0, 0)
+        elif self.orientation == SLICE_ORIENTATION_XY:
+            self.imageReslice.SetResliceAxesOrigin(0, slice_index, 0)
+        else:
+            self.imageReslice.SetResliceAxesOrigin(0, 0, slice_index)
+            
+        self.imageReslice.UpdateWholeExtent()
+        self.renderWindow.Render()
+            
     def get_slice(self):
         return self.current_slice
     
@@ -191,20 +196,25 @@ class OrthoViewer(QVTKRenderWindowInteractor):
     def set_orientation_index(self, orientation):
         self.orientation = orientation
         if self.orientation == SLICE_ORIENTATION_YZ:
-            self.vtkImageReslice.SetResliceAxesDirectionCosines(1, 0, 0, 0, -1, 0, 0, 0, 1)
+            self.imageReslice.SetResliceAxesDirectionCosines(1, 0, 0, 0, -1, 0, 0, 0, 1)
         elif self.orientation == SLICE_ORIENTATION_XZ:
-            self.vtkImageReslice.SetResliceAxesDirectionCosines(0, 1, 0, 0, 0, 1, 1, 0, 0)
+            self.imageReslice.SetResliceAxesDirectionCosines(0, 1, 0, 0, 0, 1, 1, 0, 0)
         elif self.orientation == SLICE_ORIENTATION_XY:
-            self.vtkImageReslice.SetResliceAxesDirectionCosines(1, 0, 0, 0, 0, 1, 0, 1, 0)
+            self.imageReslice.SetResliceAxesDirectionCosines(1, 0, 0, 0, 0, 1, 0, 1, 0)
         else:
             return
-
-    def setContrast(self, value):
-        pass
-
-    def set_brightness(self, value):
-        pass
 
     def display(self):
         self.renderWindow.Render()
         
+    def fun1(self, obj, event):
+        print("fun1")
+    
+    def fun2(self, obj, event):
+        print("fun2")
+    
+    def fun3(self, obj, event):
+        print("fun3")
+        
+    def fun4(self, obj, event):
+        print("fun4")

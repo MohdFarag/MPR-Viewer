@@ -3,7 +3,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
-from qtViewer import *
+from QtViewer import *
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -14,9 +14,9 @@ class MainWindow(QtWidgets.QMainWindow):
         central_widget = QtWidgets.QWidget()
         central_layout = QtWidgets.QHBoxLayout()
         
-        self.QtAxialOrthoViewer = QtViewer(f"Axial Viewer", orientation=SLICE_ORIENTATION_XY)    
-        self.QtCoronalOrthoViewer = QtViewer(f"Coronal Viewer", orientation=SLICE_ORIENTATION_XZ)    
-        self.QtSagittalOrthoViewer = QtViewer(f"Sagittal Viewer", orientation=SLICE_ORIENTATION_YZ)    
+        self.QtAxialOrthoViewer = QtViewer(f"Axial Viewer - XY", orientation=SLICE_ORIENTATION_XY)    
+        self.QtCoronalOrthoViewer = QtViewer(f"Coronal Viewer - XZ", orientation=SLICE_ORIENTATION_XZ)    
+        self.QtSagittalOrthoViewer = QtViewer(f"Sagittal Viewer - YZ", orientation=SLICE_ORIENTATION_YZ)    
         self.QtSegmentationOrthoViewer = QtViewer(f"Other Viewer")    
             
         # Set up the main layout
@@ -99,9 +99,3 @@ class MainWindow(QtWidgets.QMainWindow):
         
     def exit(self):
         self.close()
-        
-if __name__ == '__main__':
-    app = QtWidgets.QApplication([])
-    window = MainWindow()
-    window.show()
-    app.exec_()
