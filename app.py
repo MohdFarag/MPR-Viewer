@@ -17,18 +17,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.QtAxialOrthoViewer = QtViewer(f"Axial Viewer - XY", orientation=SLICE_ORIENTATION_XY)    
         self.QtCoronalOrthoViewer = QtViewer(f"Coronal Viewer - XZ", orientation=SLICE_ORIENTATION_XZ)    
         self.QtSagittalOrthoViewer = QtViewer(f"Sagittal Viewer - YZ", orientation=SLICE_ORIENTATION_YZ)    
-        self.QtSegmentationOrthoViewer = QtViewer(f"Other Viewer")    
-            
+        self.QtSegmentationOrthoViewer = QtViewer(f"Other Viewer", other_viewers=[self.QtAxialOrthoViewer.orthoViewer,self.QtCoronalOrthoViewer.orthoViewer,self.QtSagittalOrthoViewer.orthoViewer])
+               
         # Set up the main layout
         main_splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         left_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         right_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
 
         left_splitter.addWidget(self.QtAxialOrthoViewer)
-        left_splitter.addWidget(self.QtCoronalOrthoViewer)
+        left_splitter.addWidget(self.QtSegmentationOrthoViewer)
 
+        right_splitter.addWidget(self.QtCoronalOrthoViewer)
         right_splitter.addWidget(self.QtSagittalOrthoViewer)
-        right_splitter.addWidget(self.QtSegmentationOrthoViewer)
 
         main_splitter.addWidget(left_splitter)
         main_splitter.addWidget(right_splitter)
@@ -69,7 +69,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 filename = filenames[0]
                 try:
                     self.load_data(filename)
-                    self.display_data()
                 except Exception as e:
                     print(e)
                     QtWidgets.QMessageBox.critical(self, "Error", "Unable to open the image file.")                    

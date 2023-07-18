@@ -1,5 +1,6 @@
 
-from OrthoViewer import *
+from OrthoViewerV2 import *
+
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -38,75 +39,66 @@ class Worker(QObject):
 
 class QtViewer(QWidget):
 
-    def __init__(self, label, orientation=SLICE_ORIENTATION_ORTHO, other_viewers=None):
+    def __init__(self, label, orientation):
         super(QtViewer, self).__init__()
 
         # Properties
         self.label = label
         self.orientation = orientation
         self.status = False
-        self.other_viewers = other_viewers
-    
+   
         # UI
         self._init_UI()
         
-        if self.orientation != SLICE_ORIENTATION_ORTHO:
-            # Thread
-            self.thread = QThread()
-            self.worker = Worker(self.slider)
-            # Connect    
-            self.connect()
+        # Thread
+        self.thread = QThread()
+        self.worker = Worker(self.slider)
+        # Connect    
+        self.connect()
 
     def _init_UI(self):
         # PyQt Stuff
         ## Render Viewer
-        if self.orientation == SLICE_ORIENTATION_ORTHO:
-            self.orthoViewer = OrthoViewer(self.label, self.orientation, other_viewers=self.other_viewers)
-        else:
-            self.orthoViewer = OrthoViewer(self.label, self.orientation)
+        self.orthoViewer = OrthoViewer(self.label, self.orientation)
 
 
         ## Slider
-        if self.orientation != SLICE_ORIENTATION_ORTHO:
-            self.slider = QSlider(Qt.Vertical)
-            self.slider.setSingleStep(1)
-            self.slider.setValue(0)
-            self.slider.setEnabled(False)
+        self.slider = QSlider(Qt.Vertical)
+        self.slider.setSingleStep(1)
+        self.slider.setValue(0)
+        self.slider.setEnabled(False)
         
         ## Buttons
-        if self.orientation != SLICE_ORIENTATION_ORTHO:
-            self.buttonsLayout = QHBoxLayout()
-            
-            self.prevBtn = QPushButton()
-            self.prevBtn.setIcon(QIcon("./assets/decrease.svg"))
-            self.prevBtn.setStyleSheet("font-size:15px; border-radius: 6px;border: 1px solid rgba(27, 31, 35, 0.15);padding: 5px 15px; background: black")
-            self.prevBtn.setDisabled(True)
-            
-            self.playBtn = QPushButton()
-            self.playBtn.setIcon(QIcon("./assets/play.ico"))
-            self.playBtn.setStyleSheet("font-size:15px; border-radius: 6px;border: 1px solid rgba(27, 31, 35, 0.15);padding: 5px 15px;")
-            self.playBtn.setDisabled(True)
-            
-            self.nextBtn = QPushButton()
-            self.nextBtn.setIcon(QIcon("./assets/increase.svg"))
-            self.nextBtn.setStyleSheet("font-size:15px; border-radius: 6px;border: 1px solid rgba(27, 31, 35, 0.15);padding: 5px 15px; background: black")
-            self.nextBtn.setDisabled(True)
-            
-            self.buttonsLayout.addSpacerItem(QSpacerItem(80, 10))
-            self.buttonsLayout.addWidget(self.prevBtn,4)
-            self.buttonsLayout.addWidget(self.playBtn,5)
-            self.buttonsLayout.addWidget(self.nextBtn,4)
-            self.buttonsLayout.addSpacerItem(QSpacerItem(80, 10))
+        self.buttonsLayout = QHBoxLayout()
+        
+        self.prevBtn = QPushButton()
+        self.prevBtn.setIcon(QIcon("./assets/decrease.svg"))
+        self.prevBtn.setStyleSheet("font-size:15px; border-radius: 6px;border: 1px solid rgba(27, 31, 35, 0.15);padding: 5px 15px; background: black")
+        self.prevBtn.setDisabled(True)
+        
+        self.playBtn = QPushButton()
+        self.playBtn.setIcon(QIcon("./assets/play.ico"))
+        self.playBtn.setStyleSheet("font-size:15px; border-radius: 6px;border: 1px solid rgba(27, 31, 35, 0.15);padding: 5px 15px;")
+        self.playBtn.setDisabled(True)
+        
+        self.nextBtn = QPushButton()
+        self.nextBtn.setIcon(QIcon("./assets/increase.svg"))
+        self.nextBtn.setStyleSheet("font-size:15px; border-radius: 6px;border: 1px solid rgba(27, 31, 35, 0.15);padding: 5px 15px; background: black")
+        self.nextBtn.setDisabled(True)
+        
+        self.buttonsLayout.addSpacerItem(QSpacerItem(80, 10))
+        self.buttonsLayout.addWidget(self.prevBtn,4)
+        self.buttonsLayout.addWidget(self.playBtn,5)
+        self.buttonsLayout.addWidget(self.nextBtn,4)
+        self.buttonsLayout.addSpacerItem(QSpacerItem(80, 10))
         
         # Set up the layouts
         mainLayout = QVBoxLayout()
         topLayout = QHBoxLayout()
         topLayout.addWidget(self.orthoViewer)
-        if self.orientation != SLICE_ORIENTATION_ORTHO:
-            topLayout.addWidget(self.slider)
+        topLayout.addWidget(self.slider)
         mainLayout.addLayout(topLayout)
-        if self.orientation != SLICE_ORIENTATION_ORTHO:
-            mainLayout.addLayout(self.buttonsLayout)
+        mainLayout.addLayout(self.buttonsLayout)
         self.setLayout(mainLayout)
         
         self.connect_on_data("./Resources/Dataset/out.mhd")
@@ -131,17 +123,16 @@ class QtViewer(QWidget):
     def connect_on_data(self, path):
         self.orthoViewer.connect_on_data(path)
 
-        if self.orientation != SLICE_ORIENTATION_ORTHO:
-            # Settings of the button
-            self.prevBtn.setEnabled(True)
-            self.playBtn.setEnabled(True)
-            self.nextBtn.setEnabled(True)
-        
-            # Settings of the slider
-            self.slider.setEnabled(True)
-            self.slider.setMinimum(self.orthoViewer.min_slice)
-            self.slider.setMaximum(self.orthoViewer.max_slice)
-            self.slider.setValue((self.slider.maximum() + self.slider.minimum())//2)    
+        # Settings of the button
+        self.prevBtn.setEnabled(True)
+        self.playBtn.setEnabled(True)
+        self.nextBtn.setEnabled(True)
+    
+        # Settings of the slider
+        self.slider.setEnabled(True)
+        self.slider.setMinimum(self.orthoViewer.min_slice)
+        self.slider.setMaximum(self.orthoViewer.max_slice)
+        self.slider.setValue((self.slider.maximum() + self.slider.minimum())//2)    
         
     def playSlices(self):
         self.thread = QThread()
