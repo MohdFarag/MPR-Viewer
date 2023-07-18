@@ -3,7 +3,8 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
-from QtViewer import *
+from QtViewer import QtViewer
+from SegmentationViewer import SegmentationViewer
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -17,7 +18,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.QtAxialOrthoViewer = QtViewer(f"Axial Viewer - XY", orientation=SLICE_ORIENTATION_XY)    
         self.QtCoronalOrthoViewer = QtViewer(f"Coronal Viewer - XZ", orientation=SLICE_ORIENTATION_XZ)    
         self.QtSagittalOrthoViewer = QtViewer(f"Sagittal Viewer - YZ", orientation=SLICE_ORIENTATION_YZ)    
-        self.QtSegmentationOrthoViewer = QtViewer(f"Other Viewer", other_viewers=[self.QtAxialOrthoViewer.orthoViewer,self.QtCoronalOrthoViewer.orthoViewer,self.QtSagittalOrthoViewer.orthoViewer])
+        self.QtSegmentationOrthoViewer = SegmentationViewer(f"Other Viewer", other_viewers=[self.QtAxialOrthoViewer.orthoViewer,self.QtCoronalOrthoViewer.orthoViewer,self.QtSagittalOrthoViewer.orthoViewer])
                
         # Set up the main layout
         main_splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
