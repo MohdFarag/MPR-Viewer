@@ -1,49 +1,17 @@
 
-from OrthoViewerV2 import *
+from OrthoViewer import *
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-import time
+from Worker import *
 
-class Worker(QObject):    
-    finished = pyqtSignal()
-    progress = pyqtSignal(int)
-    
-    def __init__(self, slider:QSlider):
-        super().__init__()
-        self.slider = slider
-        self._isRunning = True
+class QtOrthoWidget(QWidget):
 
-    def run(self):
-        """Long-running task."""
-        if not self._isRunning :
-            self._isRunning = True
-
-        i = self.slider.value()
-        slider_max = self.slider.maximum()
-        while i <= slider_max:
-            if self._isRunning:
-                self.progress.emit(i)
-                time.sleep(0.0001)
-            else:
-                break
-            
-            i += 1
-
-        self.slider.setValue(i)
-        self.finished.emit()
-        
-    def pause(self):
-        self._isRunning = False
-
-class QtViewer(QWidget):
-
-    def __init__(self, label, orientation):
-        super(QtViewer, self).__init__()
+    def __init__(self, orientation):
+        super(QtOrthoWidget, self).__init__()
 
         # Properties
-        self.label = label
         self.orientation = orientation
         self.status = False
    
@@ -59,8 +27,7 @@ class QtViewer(QWidget):
     def _init_UI(self):
         # PyQt Stuff
         ## Render Viewer
-        self.orthoViewer = OrthoViewer(self.label, self.orientation)
-
+        self.orthoViewer = OrthoViewer(self.orientation)
 
         ## Slider
         self.slider = QSlider(Qt.Vertical)
@@ -101,8 +68,6 @@ class QtViewer(QWidget):
         mainLayout.addLayout(self.buttonsLayout)
         self.setLayout(mainLayout)
         
-        self.connect_on_data("./Resources/Dataset/out.mhd")
-
     def connect(self):
         # Connect slider signals to slice update slots
         self.slider.valueChanged.connect(self.update_slice)
@@ -132,7 +97,10 @@ class QtViewer(QWidget):
         self.slider.setEnabled(True)
         self.slider.setMinimum(self.orthoViewer.min_slice)
         self.slider.setMaximum(self.orthoViewer.max_slice)
-        self.slider.setValue((self.slider.maximum() + self.slider.minimum())//2)    
+        self.slider.setValue((self.slider.maximum() + self.slider.minimum())//2)
+    
+    def render(self):
+        self.orthoViewer.render()
         
     def playSlices(self):
         self.thread = QThread()

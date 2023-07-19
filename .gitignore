@@ -2,3 +2,6 @@ __pycache__/*
 Resources/*
 __pycache__/QtViewer.cpython-310.pyc
 __pycache__/OrthoViewer.cpython-310.pyc
+Tests/*
+Tests/test.py
+Tests/test2.py

@@ -3,7 +3,8 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
-from QtViewer import *
+from QtOrthoWidget import QtOrthoWidget, SLICE_ORIENTATION_XY, SLICE_ORIENTATION_XZ, SLICE_ORIENTATION_YZ
+from SegmentationViewer import SegmentationViewer
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -14,10 +15,10 @@ class MainWindow(QtWidgets.QMainWindow):
         central_widget = QtWidgets.QWidget()
         central_layout = QtWidgets.QHBoxLayout()
         
-        self.QtAxialOrthoViewer = QtViewer(f"Axial Viewer - XY", orientation=SLICE_ORIENTATION_XY)    
-        self.QtCoronalOrthoViewer = QtViewer(f"Coronal Viewer - XZ", orientation=SLICE_ORIENTATION_XZ)    
-        self.QtSagittalOrthoViewer = QtViewer(f"Sagittal Viewer - YZ", orientation=SLICE_ORIENTATION_YZ)    
-        self.QtSegmentationOrthoViewer = QtViewer(f"Other Viewer", other_viewers=[self.QtAxialOrthoViewer.orthoViewer,self.QtCoronalOrthoViewer.orthoViewer,self.QtSagittalOrthoViewer.orthoViewer])
+        self.QtAxialOrthoViewer = QtOrthoWidget(SLICE_ORIENTATION_XY)
+        self.QtCoronalOrthoViewer = QtOrthoWidget(SLICE_ORIENTATION_XZ)
+        self.QtSagittalOrthoViewer = QtOrthoWidget(SLICE_ORIENTATION_YZ)
+        self.QtSegmentationOrthoViewer = SegmentationViewer(other_viewers=[self.QtAxialOrthoViewer.orthoViewer,self.QtCoronalOrthoViewer.orthoViewer,self.QtSagittalOrthoViewer.orthoViewer])
                
         # Set up the main layout
         main_splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
@@ -69,10 +70,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 filename = filenames[0]
                 try:
                     self.load_data(filename)
+                    self.render_data()
                 except Exception as e:
                     print(e)
                     QtWidgets.QMessageBox.critical(self, "Error", "Unable to open the image file.")                    
-
 
     def load_data(self, filename):
         # Load the image
@@ -80,13 +81,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.QtCoronalOrthoViewer.connect_on_data(filename)
         self.QtSagittalOrthoViewer.connect_on_data(filename)
         self.QtSegmentationOrthoViewer.connect_on_data(filename)
-
-    def display_data(self):
-        # Set up the image slice views
-        self.QtAxialOrthoViewer.display_data()
-        self.QtCoronalOrthoViewer.display_data()
-        self.QtSagittalOrthoViewer.display_data()
-        self.QtSegmentationOrthoViewer.display_data()
+        
+    def render_data(self):
+        self.QtAxialOrthoViewer.render()
+        self.QtCoronalOrthoViewer.render()
+        self.QtSagittalOrthoViewer.render()
+        self.QtSegmentationOrthoViewer.render()
 
     # Close the application
     def closeEvent(self, QCloseEvent):

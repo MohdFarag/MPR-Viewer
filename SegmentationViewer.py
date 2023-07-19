@@ -3,22 +3,18 @@
 import numpy as np
 
 from vtk import *
-import vtk.qt
-vtk.qt.QVTKRWIBase = "QGLWidget"
-from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from OrthoViewerV2 import OrthoViewer
+from VtkViewer import *
 
-class SegmentationViewer(OrthoViewer):
+class SegmentationViewer(VtkViewer):
 
-    def __init__(self, label, orientation, other_viewers=None):
-        super(OrthoViewer, self).__init__()
+    def __init__(self, other_viewers=None):
+        super(SegmentationViewer, self).__init__(label="Segmentation Viewer")
         
         # Properties
         self.other_viewers = other_viewers
-        
-        # Vtk Stuff           
-        
-        ## Segmentation     
+                       
+        # Vtk Stuff
+        ## Segmentation
         self.segmentationImage = vtkImageData()
         self.segmentationImage.DeepCopy(self.imageShiftScale.GetOutput())            
         self.segmentationImage.Modified()
@@ -38,7 +34,27 @@ class SegmentationViewer(OrthoViewer):
         
         # Image Blend
         self.imageBlend.AddInputData(self.segmentationLabelImage.GetOutput())
-        self.imageBlend.SetOpacity(0, 1)
+        self.imageBlend.UpdateWholeExtent() 
+
+        for viewer in self.other_viewers:
+            imageActorOrtho = vtkImageActor()
+            imageActorOrtho.SetInputData(viewer.imageReslice.GetOutput())
+            imageActorOrtho.SetUserMatrix(viewer.imageReslice.GetResliceAxes())
+            self.renderer.AddActor(imageActorOrtho)
+            
+    # Connect on data
+    def connect_on_data(self, path:str):
+        super().connect_on_data(path)
+        
+        ## Segmentation
+        self.segmentationImage.DeepCopy(self.imageShiftScale.GetOutput())            
+        self.segmentationImage.Modified()
+        
+        self.segmentationLabelImage.SetInputData(self.segmentationImage)
+        self.segmentationLabelImage.UpdateWholeExtent()
+        
+        # Image Blend
+        self.imageBlend.AddInputData(self.segmentationLabelImage.GetOutput())
         self.imageBlend.UpdateWholeExtent() 
 
         for viewer in self.other_viewers:
