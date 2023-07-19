@@ -1,8 +1,8 @@
 ObjectType = Image
 NDims = 1
-BinaryData = True
+BinaryData = False
 BinaryDataByteOrderMSB = False
-CompressedData = True
+CompressedData = False
 CompressedDataSize = 0
 TransformMatrix = 0 0 0 0 0 0 0 0 0
 Offset = 0 0 0
