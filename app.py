@@ -3,8 +3,8 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
-from QtOrthoWidget import QtOrthoWidget, SLICE_ORIENTATION_XY, SLICE_ORIENTATION_XZ, SLICE_ORIENTATION_YZ
-from SegmentationViewer import SegmentationViewer
+from QtOrthoViewer import QtOrthoViewer, SLICE_ORIENTATION_XY, SLICE_ORIENTATION_XZ, SLICE_ORIENTATION_YZ
+from QtSegmentationViewer import QtSegmentationViewer
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -15,10 +15,10 @@ class MainWindow(QtWidgets.QMainWindow):
         central_widget = QtWidgets.QWidget()
         central_layout = QtWidgets.QHBoxLayout()
         
-        self.QtAxialOrthoViewer = QtOrthoWidget(SLICE_ORIENTATION_XY)
-        self.QtCoronalOrthoViewer = QtOrthoWidget(SLICE_ORIENTATION_XZ)
-        self.QtSagittalOrthoViewer = QtOrthoWidget(SLICE_ORIENTATION_YZ)
-        self.QtSegmentationOrthoViewer = SegmentationViewer(other_viewers=[self.QtAxialOrthoViewer.orthoViewer,self.QtCoronalOrthoViewer.orthoViewer,self.QtSagittalOrthoViewer.orthoViewer])
+        self.QtAxialOrthoViewer = QtOrthoViewer(SLICE_ORIENTATION_XY)
+        self.QtCoronalOrthoViewer = QtOrthoViewer(SLICE_ORIENTATION_XZ)
+        self.QtSagittalOrthoViewer = QtOrthoViewer(SLICE_ORIENTATION_YZ)
+        self.QtSegmentationViewer = QtSegmentationViewer([self.QtAxialOrthoViewer.viewer,self.QtCoronalOrthoViewer.viewer,self.QtSagittalOrthoViewer.viewer])
                
         # Set up the main layout
         main_splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
@@ -26,7 +26,7 @@ class MainWindow(QtWidgets.QMainWindow):
         right_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
 
         left_splitter.addWidget(self.QtAxialOrthoViewer)
-        left_splitter.addWidget(self.QtSegmentationOrthoViewer)
+        left_splitter.addWidget(self.QtSegmentationViewer)
 
         right_splitter.addWidget(self.QtCoronalOrthoViewer)
         right_splitter.addWidget(self.QtSagittalOrthoViewer)
@@ -80,13 +80,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.QtAxialOrthoViewer.connect_on_data(filename)
         self.QtCoronalOrthoViewer.connect_on_data(filename)
         self.QtSagittalOrthoViewer.connect_on_data(filename)
-        self.QtSegmentationOrthoViewer.connect_on_data(filename)
+        self.QtSegmentationViewer.connect_on_data(filename)
         
     def render_data(self):
         self.QtAxialOrthoViewer.render()
         self.QtCoronalOrthoViewer.render()
         self.QtSagittalOrthoViewer.render()
-        self.QtSegmentationOrthoViewer.render()
+        self.QtSegmentationViewer.render()
 
     # Close the application
     def closeEvent(self, QCloseEvent):
@@ -94,7 +94,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.QtAxialOrthoViewer.close()
         self.QtCoronalOrthoViewer.close()
         self.QtSagittalOrthoViewer.close()
-        self.QtSegmentationOrthoViewer.close()
+        self.QtSegmentationViewer.close()
         
     def exit(self):
         self.close()

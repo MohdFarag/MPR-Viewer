@@ -123,7 +123,7 @@ class OrthoViewer(VtkViewer):
     def set_orientation(self, orientation):
         self.orientation = orientation
         if self.orientation == SLICE_ORIENTATION_YZ:
-            self.imageReslice.SetResliceAxesDirectionCosines(1, 0, 0, 0,-1, 0, 0, 0, 1)
+            self.imageReslice.SetResliceAxesDirectionCosines(1, 0, 0, 0, 1, 0, 0, 0, 1)
         elif self.orientation == SLICE_ORIENTATION_XZ:
             self.imageReslice.SetResliceAxesDirectionCosines(0, 1, 0, 0, 0, 1, 1, 0, 0)
         elif self.orientation == SLICE_ORIENTATION_XY:

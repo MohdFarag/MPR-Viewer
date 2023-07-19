@@ -6,29 +6,36 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from Worker import *
 
-class QtOrthoWidget(QWidget):
+from QtViewer import *
 
+class QtOrthoViewer(QtViewer):
+
+    # Constructor
     def __init__(self, orientation):
-        super(QtOrthoWidget, self).__init__()
+        super(QtOrthoViewer, self).__init__()
 
         # Properties
         self.orientation = orientation
         self.status = False
-   
-        # UI
-        self._init_UI()
         
+        ## Render Viewer
+        self.viewer = OrthoViewer(self.orientation)
+
+        # Initialize the UI        
+        self._init_UI()
+
         # Thread
         self.thread = QThread()
         self.worker = Worker(self.slider)
-        # Connect    
+        
+        # Connect signals and slots
         self.connect()
 
+    # Initialize the UI
     def _init_UI(self):
+        super()._init_UI()
+        
         # PyQt Stuff
-        ## Render Viewer
-        self.orthoViewer = OrthoViewer(self.orientation)
-
         ## Slider
         self.slider = QSlider(Qt.Vertical)
         self.slider.setSingleStep(1)
@@ -60,34 +67,33 @@ class QtOrthoWidget(QWidget):
         self.buttonsLayout.addSpacerItem(QSpacerItem(80, 10))
         
         # Set up the layouts
-        mainLayout = QVBoxLayout()
-        topLayout = QHBoxLayout()
-        topLayout.addWidget(self.orthoViewer)
-        topLayout.addWidget(self.slider)
-        mainLayout.addLayout(topLayout)
-        mainLayout.addLayout(self.buttonsLayout)
-        self.setLayout(mainLayout)
-        
+        self.topLayout.addWidget(self.slider)
+        self.mainLayout.addLayout(self.buttonsLayout)
+    
+    # Connect signals and slots        
     def connect(self):
         # Connect slider signals to slice update slots
         self.slider.valueChanged.connect(self.update_slice)
         
         # Connect buttons to slots
+        self.prevBtn.clicked.connect(lambda: self.update_slice(self.slider.value()-10))
         self.playBtn.clicked.connect(self.playPauseBtn)
+        self.nextBtn.clicked.connect(lambda: self.update_slice(self.slider.value()+10))
 
+    # Update slice
     def update_slice(self, slice_index):
-        self.orthoViewer.set_slice(slice_index)
-        
-    def closeEvent(self, QCloseEvent):
-        super().closeEvent(QCloseEvent)
-        self.orthoViewer.Finalize()
-        
-    def getOrthoViewer(self):
-        return self.orthoViewer
-    
-    def connect_on_data(self, path):
-        self.orthoViewer.connect_on_data(path)
+        if slice_index < self.slider.minimum():
+            slice_index = self.slider.minimum()
+        elif slice_index > self.slider.maximum():
+            slice_index = self.slider.maximum()
 
+        self.slider.setValue(slice_index)
+        self.viewer.set_slice(slice_index)
+
+    # Connect on data
+    def connect_on_data(self, path):
+        super().connect_on_data(path)
+        
         # Settings of the button
         self.prevBtn.setEnabled(True)
         self.playBtn.setEnabled(True)
@@ -95,13 +101,11 @@ class QtOrthoWidget(QWidget):
     
         # Settings of the slider
         self.slider.setEnabled(True)
-        self.slider.setMinimum(self.orthoViewer.min_slice)
-        self.slider.setMaximum(self.orthoViewer.max_slice)
+        self.slider.setMinimum(self.viewer.min_slice)
+        self.slider.setMaximum(self.viewer.max_slice)
         self.slider.setValue((self.slider.maximum() + self.slider.minimum())//2)
-    
-    def render(self):
-        self.orthoViewer.render()
-        
+
+    # Play slices            
     def playSlices(self):
         self.thread = QThread()
         self.worker = Worker(self.slider)
@@ -131,11 +135,13 @@ class QtOrthoWidget(QWidget):
             self.pauseSlices
         )
 
+    # Pause slices
     def pauseSlices(self):
         self.playBtn.setIcon(QIcon("./assets/play.ico"))
         self.worker.pause()
         self.status = False
-        
+
+    # Play/Pause button function    
     def playPauseBtn(self):
         if self.status == False:
             self.playSlices()
