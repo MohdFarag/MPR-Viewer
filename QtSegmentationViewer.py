@@ -4,7 +4,6 @@ from SegmentationViewer import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from Worker import *
 
 from QtViewer import *
 
@@ -29,4 +28,4 @@ class QtSegmentationViewer(QtViewer):
         super()._init_UI()
         
         # Set up the layout
-        self.mainLayout.addItem(QSpacerItem(10, 30, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        self.mainLayout.addItem(QSpacerItem(10,20))
