@@ -59,12 +59,45 @@ class OrthoViewer(VtkViewer):
         self.imageReslice.SetInputData(self.imageBlend.GetOutput())
         self.imageReslice.SetOutputDimensionality(2)
         self.imageReslice.SetInterpolationModeToLinear()
-        # self.imageReslice.SetInterpolationModeToNearestNeighbor()
         self.imageReslice.UpdateWholeExtent()
 
         self.imageActor = vtkImageActor()
         self.imageActor.SetInputData(self.imageReslice.GetOutput())
         self.renderer.AddActor(self.imageActor)
+        
+        # Calculate the length of the axes based on image dimensions
+        image_dims = self.GetRenderWindow().GetSize()
+        axes_length_width = image_dims[0] * 0.5  # Set the axes length to half of the maximum dimension
+        axes_length_height = image_dims[1] * 0.5  # Set the axes length to half of the maximum dimension
+    
+        # Create the X-axis line widget
+        self.line_widget_x = vtk.vtkLineWidget()
+        self.line_widget_x.SetInteractor(self.GetRenderWindow().GetInteractor())
+        self.line_widget_x.SetResolution(100)  # Set the resolution of the line
+        self.line_widget_x.SetPoint1(-axes_length_width, 0, 0)
+        self.line_widget_x.SetPoint2(axes_length_width, 0, 0)
+        self.line_widget_x.SetAlignToZAxis()
+        self.line_widget_x.AddObserver(vtkCommand.InteractionEvent, self.moveAxes)
+        self.line_widget_x.AddObserver(vtkCommand.InteractionEvent, self.changeAxesSlice)
+        self.line_widget_x.GetLineProperty().SetColor(1, 0, 0)  # Set the color of the X-axis to red
+
+        # Create the Y-axis line widget
+        self.line_widget_y = vtk.vtkLineWidget()
+        self.line_widget_y.SetInteractor(self.GetRenderWindow().GetInteractor())
+        self.line_widget_y.SetResolution(100)  # Set the resolution of the line
+        self.line_widget_y.SetPoint1(0, -axes_length_height, 0)
+        self.line_widget_y.SetPoint2(0, axes_length_height, 0)
+        self.line_widget_y.SetAlignToZAxis()
+        self.line_widget_y.AddObserver(vtkCommand.InteractionEvent, self.moveAxes)
+        self.line_widget_y.AddObserver(vtkCommand.InteractionEvent, self.changeAxesSlice)
+
+        self.line_widget_y.GetLineProperty().SetColor(0, 1, 0)  # Set the color of the Y-axis to green
+
+        self.x_line_pos = np.array((list(self.line_widget_x.GetPoint1()), list(self.line_widget_x.GetPoint2())))
+        self.y_line_pos = np.array((list(self.line_widget_y.GetPoint1()), list(self.line_widget_y.GetPoint2())))
+
+        self.line_widget_x.On()
+        self.line_widget_y.On()
 
         self.imagePlaneWidget = vtkImagePlaneWidget()
         self.imagePlaneWidget.SetInteractor(self.GetRenderWindow().GetInteractor())
@@ -73,14 +106,13 @@ class OrthoViewer(VtkViewer):
         self.imagePlaneWidget.SetSliceIndex(0)
         self.imagePlaneWidget.RestrictPlaneToVolumeOn()
         self.imagePlaneWidget.DisplayTextOn()
-        # self.imagePlaneWidget.AddObserver(vtkCommand.WindowLevelEvent,self.xxxx)
         
         ### Style
         self.imagePlaneWidget.GetPlaneProperty().SetColor(1, 1, 0)
         self.imagePlaneWidget.GetPlaneProperty().SetLineWidth(2.5)   
         self.imagePlaneWidget.GetSelectedPlaneProperty().SetColor(1, 1, 1)
-        self.imagePlaneWidget.GetSelectedPlaneProperty().SetLineWidth(2.5)
-
+        self.imagePlaneWidget.GetSelectedPlaneProperty().SetLineWidth(2.5)    
+        
     def closeEvent(self, QCloseEvent):
         super().closeEvent(QCloseEvent)
         self.imageActor.FastDelete()
@@ -99,7 +131,7 @@ class OrthoViewer(VtkViewer):
         ### Image Blend
         self.imageBlend.AddInputData(self.imageMapToColors.GetOutput())
         self.imageBlend.SetOpacity(0, 1)        
-        self.imageBlend.UpdateWholeExtent() 
+        self.imageBlend.UpdateWholeExtent()
 
         # Image Reslice
         self.imageReslice.SetInputData(self.imageBlend.GetOutput())
@@ -112,6 +144,33 @@ class OrthoViewer(VtkViewer):
         self.imagePlaneWidget.SetInputData(self.imageReslice.GetOutput())        
         self.imagePlaneWidget.On()
 
+    def moveAxes(self, obj, event):
+        interactor = obj.GetInteractor()
+        
+        # Update the position of the other line widget based on the moved one
+        if obj == self.line_widget_x:
+            x_line_pos_new = np.array((list(self.line_widget_x.GetPoint1()), list(self.line_widget_x.GetPoint2())))
+            diff = x_line_pos_new -self.x_line_pos
+            
+            self.line_widget_y.SetPoint1(self.line_widget_y.GetPoint1() + diff[0])
+            self.line_widget_y.SetPoint2(self.line_widget_y.GetPoint2() + diff[1])
+        elif obj == self.line_widget_y:
+            y_line_pos_new = self.line_widget_y.GetPoint1(), self.line_widget_y.GetPoint2()
+            diff = y_line_pos_new - self.y_line_pos
+
+            self.line_widget_x.SetPoint1(self.line_widget_x.GetPoint1() + diff[0])
+            self.line_widget_x.SetPoint2(self.line_widget_x.GetPoint2() + diff[0])
+
+        self.x_line_pos = np.array((list(self.line_widget_x.GetPoint1()), list(self.line_widget_x.GetPoint2())))
+        self.y_line_pos = np.array((list(self.line_widget_y.GetPoint1()), list(self.line_widget_y.GetPoint2())))
+
+        # Render the updated scene
+        interactor.Render()
+
+    def changeAxesSlice(self, obj, event):
+        
+        pass
+        
     def set_orientation(self, orientation):
         self.orientation = orientation
         if self.orientation == SLICE_ORIENTATION_YZ:

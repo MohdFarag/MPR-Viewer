@@ -67,8 +67,8 @@ class VtkViewer(QVTKRenderWindowInteractor):
         self.renderWindow.AddObserver(vtkCommand.ModifiedEvent, self.changeSizeEvent)
         self.renderWindow.AddRenderer(self.renderer)
         
-        self.render()
-                       
+        self.GetRenderWindow().Render()
+
     def xxxx(self,obj, event):
         print(self.imagePlaneWidget.GetCursorData())
     
