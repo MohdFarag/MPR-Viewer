@@ -18,10 +18,10 @@ class MainWindow(QtWidgets.QMainWindow):
         
         # Create the viewers
         self.vtkBaseClass = VtkBase()
-        self.QtAxialOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XY)
-        self.QtCoronalOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XZ)
-        self.QtSagittalOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_YZ)
-        self.QtSegmentationViewer = QtSegmentationViewer(self.vtkBaseClass, [self.QtAxialOrthoViewer.viewer,self.QtCoronalOrthoViewer.viewer,self.QtSagittalOrthoViewer.viewer])
+        self.QtAxialOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XY, "Axial Plane")
+        self.QtCoronalOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XZ, "Coronal Plane")
+        self.QtSagittalOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_YZ, "Sagittal Plane")
+        self.QtSegmentationViewer = QtSegmentationViewer(self.vtkBaseClass, [self.QtAxialOrthoViewer.viewer,self.QtCoronalOrthoViewer.viewer,self.QtSagittalOrthoViewer.viewer], label="Segmentation Viewer")
 
         # Set up the main layout
         main_splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)

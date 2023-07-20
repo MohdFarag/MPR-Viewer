@@ -8,8 +8,8 @@ from VtkViewer import *
 class SegmentationViewer(VtkViewer):
 
     # Constructor
-    def __init__(self, vtkBaseClass:VtkBase, other_viewers=None):
-        super(SegmentationViewer, self).__init__(label="Segmentation Viewer", vtkBaseClass=vtkBaseClass)
+    def __init__(self, vtkBaseClass:VtkBase, other_viewers=None, label:str="Segmentation Viewer"):
+        super(SegmentationViewer, self).__init__(label=label, vtkBaseClass=vtkBaseClass)
         
         # Properties
         self.other_viewers = other_viewers

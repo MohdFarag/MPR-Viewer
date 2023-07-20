@@ -8,8 +8,8 @@ from VtkAdditions import *
 
 class OrthoViewer(VtkViewer):
 
-    def __init__(self, vtkBaseClass:VtkBase, orientation):
-        super(OrthoViewer, self).__init__(label="Orthogonal Viewer", vtkBaseClass=vtkBaseClass)
+    def __init__(self, vtkBaseClass:VtkBase, orientation, label:str="Orthogonal Viewer"):
+        super(OrthoViewer, self).__init__(label=label, vtkBaseClass=vtkBaseClass)
 
         # Properties
         self.orientation = orientation

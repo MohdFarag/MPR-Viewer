@@ -11,15 +11,16 @@ from QtViewer import *
 class QtOrthoViewer(QtViewer):
 
     # Constructor
-    def __init__(self, vtkBaseClass, orientation):
+    def __init__(self, vtkBaseClass, orientation, label:str="Orthogonal Viewer"):
         super(QtOrthoViewer, self).__init__()
 
         # Properties
         self.orientation = orientation
         self.status = False
+        self.label = label
         
         ## Render Viewer
-        self.viewer = OrthoViewer(vtkBaseClass, self.orientation)
+        self.viewer = OrthoViewer(vtkBaseClass, self.orientation, self.label)
 
         # Initialize the UI        
         self._init_UI()
