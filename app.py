@@ -15,6 +15,7 @@ class MainWindow(QtWidgets.QMainWindow):
         central_widget = QtWidgets.QWidget()
         central_layout = QtWidgets.QHBoxLayout()
         
+        # Create the viewers
         self.QtAxialOrthoViewer = QtOrthoViewer(SLICE_ORIENTATION_XY)
         self.QtCoronalOrthoViewer = QtOrthoViewer(SLICE_ORIENTATION_XZ)
         self.QtSagittalOrthoViewer = QtOrthoViewer(SLICE_ORIENTATION_YZ)
