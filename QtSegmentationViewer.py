@@ -9,14 +9,14 @@ from QtViewer import *
 
 class QtSegmentationViewer(QtViewer):
 
-    def __init__(self, otherViewers):
+    def __init__(self, vtkBaseClass, otherViewers):
         super(QtSegmentationViewer, self).__init__()
 
         # Properties
         self.otherViewers = otherViewers
         
         ## Render Viewer
-        self.viewer = SegmentationViewer(self.otherViewers)
+        self.viewer = SegmentationViewer(vtkBaseClass, self.otherViewers)
 
         # Initialize the UI        
         self._init_UI()

@@ -23,7 +23,7 @@ class vtkAxesWidget():
         self.line_widget_y.SetAlignToZAxis()
        
         self.AddObservers()
-    
+        
     def SetInteractor(self, interactor):
         self.line_widget_x.SetInteractor(interactor)
         self.line_widget_y.SetInteractor(interactor)
@@ -42,10 +42,10 @@ class vtkAxesWidget():
     def SetPosition(self, x, y):
         self.x = x
         self.y = y
-        self.line_widget_x.SetPoint1(x-self.width/2, 0, 0)
-        self.line_widget_x.SetPoint2(x+self.width/2, 0, 0)
-        self.line_widget_y.SetPoint1(0, y-self.height/2, 0)
-        self.line_widget_y.SetPoint2(0, y+self.height/2, 0)
+        self.line_widget_x.SetPoint1(x-self.width/2, 0, 1)
+        self.line_widget_x.SetPoint2(x+self.width/2, 0, 1)
+        self.line_widget_y.SetPoint1(0, y-self.height/2, 1)
+        self.line_widget_y.SetPoint2(0, y+self.height/2, 1)
     
         self.x_line_pos = self.GetPointsX()
         self.y_line_pos = self.GetPointsY()
@@ -53,10 +53,6 @@ class vtkAxesWidget():
     def SetColor(self, x_color, y_color):
         self.line_widget_x.GetLineProperty().SetColor(x_color)  # Set the color of the X-axis to red       
         self.line_widget_y.GetLineProperty().SetColor(y_color)  # Set the color of the Y-axis to green
-
-    def On(self):
-        self.line_widget_x.On()
-        self.line_widget_y.On()
 
     def GetPointsX(self):
         p1 = list(self.line_widget_x.GetPoint1())
@@ -67,6 +63,10 @@ class vtkAxesWidget():
         p1 = list(self.line_widget_y.GetPoint1())
         p2 = list(self.line_widget_y.GetPoint2())
         return np.array([p1, p2])
+
+    def On(self):
+        self.line_widget_x.On()
+        self.line_widget_y.On()
     
     # Events
     def AddObservers(self):    
@@ -75,7 +75,8 @@ class vtkAxesWidget():
          
     def moveEvent(self, obj, event):
         interactor = obj.GetInteractor()
-           
+        print(self.bounds)
+        print(self.x,self.y)
         # Update the position of the other line widget based on the moved one
         if obj == self.line_widget_x:
             x_line_pos_new = self.GetPointsX()

@@ -5,6 +5,7 @@ from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
 from QtOrthoViewer import QtOrthoViewer, SLICE_ORIENTATION_XY, SLICE_ORIENTATION_XZ, SLICE_ORIENTATION_YZ
 from QtSegmentationViewer import QtSegmentationViewer
+from VtkBase import VtkBase
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -16,11 +17,12 @@ class MainWindow(QtWidgets.QMainWindow):
         central_layout = QtWidgets.QHBoxLayout()
         
         # Create the viewers
-        self.QtAxialOrthoViewer = QtOrthoViewer(SLICE_ORIENTATION_XY)
-        self.QtCoronalOrthoViewer = QtOrthoViewer(SLICE_ORIENTATION_XZ)
-        self.QtSagittalOrthoViewer = QtOrthoViewer(SLICE_ORIENTATION_YZ)
-        self.QtSegmentationViewer = QtSegmentationViewer([self.QtAxialOrthoViewer.viewer,self.QtCoronalOrthoViewer.viewer,self.QtSagittalOrthoViewer.viewer])
-               
+        self.vtkBaseClass = VtkBase()
+        self.QtAxialOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XY)
+        self.QtCoronalOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XZ)
+        self.QtSagittalOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_YZ)
+        self.QtSegmentationViewer = QtSegmentationViewer(self.vtkBaseClass, [self.QtAxialOrthoViewer.viewer,self.QtCoronalOrthoViewer.viewer,self.QtSagittalOrthoViewer.viewer])
+
         # Set up the main layout
         main_splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         left_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
@@ -69,25 +71,26 @@ class MainWindow(QtWidgets.QMainWindow):
             filenames = file_dialog.selectedFiles()
             if len(filenames) > 0:
                 filename = filenames[0]
-                try:
-                    self.load_data(filename)
-                    self.render_data()
-                except Exception as e:
-                    print(e)
-                    QtWidgets.QMessageBox.critical(self, "Error", "Unable to open the image file.")                    
+                # try:
+                self.load_data(filename)
+                self.render_data()
+                # except Exception as e:
+                #     print(e)
+                #     QtWidgets.QMessageBox.critical(self, "Error", "Unable to open the image file.")                    
 
     def load_data(self, filename):
         # Load the image
+        self.vtkBaseClass.connect_on_data(filename)
         self.QtAxialOrthoViewer.connect_on_data(filename)
         self.QtCoronalOrthoViewer.connect_on_data(filename)
         self.QtSagittalOrthoViewer.connect_on_data(filename)
         self.QtSegmentationViewer.connect_on_data(filename)
         
     def render_data(self):
-        self.QtAxialOrthoViewer.render()
-        self.QtCoronalOrthoViewer.render()
-        self.QtSagittalOrthoViewer.render()
-        self.QtSegmentationViewer.render()
+        self.QtAxialOrthoViewer.Render()
+        self.QtCoronalOrthoViewer.Render()
+        self.QtSagittalOrthoViewer.Render()
+        self.QtSegmentationViewer.Render()
 
     # Close the application
     def closeEvent(self, QCloseEvent):

@@ -11,7 +11,7 @@ from QtViewer import *
 class QtOrthoViewer(QtViewer):
 
     # Constructor
-    def __init__(self, orientation):
+    def __init__(self, vtkBaseClass, orientation):
         super(QtOrthoViewer, self).__init__()
 
         # Properties
@@ -19,7 +19,7 @@ class QtOrthoViewer(QtViewer):
         self.status = False
         
         ## Render Viewer
-        self.viewer = OrthoViewer(self.orientation)
+        self.viewer = OrthoViewer(vtkBaseClass, self.orientation)
 
         # Initialize the UI        
         self._init_UI()
@@ -88,7 +88,7 @@ class QtOrthoViewer(QtViewer):
             slice_index = self.slider.maximum()
 
         self.slider.setValue(slice_index)
-        self.viewer.set_slice(slice_index)
+        self.viewer.set_slice_index(slice_index)
 
     # Connect on data
     def connect_on_data(self, path):

@@ -39,5 +39,5 @@ class QtViewer(QWidget):
         self.viewer.connect_on_data(path)
     
     # Render the viewer
-    def render(self):
-        self.viewer.render()
+    def Render(self):
+        self.viewer.Render()
