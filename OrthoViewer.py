@@ -14,9 +14,9 @@ class OrthoViewer(VtkViewer):
         self.current_slice = 0
         self.min_slice = 0
         self.max_slice = 0
+        self.labels = []
                        
         # Vtk Stuff
-        
         ### Image Window Level        
         self.imageWindowLevel = self.vtkBaseClass.imageWindowLevel
 
@@ -72,14 +72,51 @@ class OrthoViewer(VtkViewer):
         color[self.orientation] = 0
         self.renderer.SetBackground(color)
 
+        if self.orientation == SLICE_ORIENTATION_XY:
+            self.add_text_actor(text="R", position=[0.05, 0.5])
+            self.add_text_actor(text="L", position=[0.95, 0.5])
+            self.add_text_actor(text="A", position=[0.5, 0.05])
+            self.add_text_actor(text="P", position=[0.5, 0.9])
+        elif self.orientation == SLICE_ORIENTATION_XZ:
+            self.add_text_actor(text="R", position=[0.05, 0.5])
+            self.add_text_actor(text="L", position=[0.95, 0.5])
+            self.add_text_actor(text="I", position=[0.5, 0.05])
+            self.add_text_actor(text="S", position=[0.5, 0.9])
+        elif self.orientation == SLICE_ORIENTATION_YZ:
+            self.add_text_actor(text="A", position=[0.05, 0.5])
+            self.add_text_actor(text="P", position=[0.95, 0.5])
+            self.add_text_actor(text="I", position=[0.5, 0.05])
+            self.add_text_actor(text="S", position=[0.5, 0.9])
+    
+            # self.GetRenderWindow().AddObserver(vtkCommand.ModifiedEvent, self.changeSizeEvent2)
+                
         # Add observers
         self.add_observers()
-                
+    
     # Connect on data
     def connect_on_data(self, path:str):
         super().connect_on_data(path)
         self.set_slice_range()
-           
+
+    # Add text
+    def add_text_actor(self, text:str, position:list):
+        ## Label Text Actor
+        textActor = vtkTextActor() 
+        textActor.SetInput(text)
+        textActor.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
+        textActor.GetPositionCoordinate().SetValue(position[0], position[1])
+        textActor.GetTextProperty().SetFontSize(18)
+        textActor.GetTextProperty().SetColor(0.8, 0.8, 0)
+        textActor.GetTextProperty().SetShadow(1)
+        textActor.GetTextProperty().SetJustificationToCentered()
+        textActor.GetTextProperty().SetVerticalJustificationToCentered()
+        textActor.GetTextProperty().SetFontFamilyToTimes()
+        textActor.GetTextProperty().SetBold(1)
+        self.renderer.AddActor2D(textActor)
+
+        # Add to list of labels
+        self.labels.append((textActor, position))
+       
     # Get slice range
     def get_slices_range(self):
         return self.min_slice, self.max_slice
@@ -99,7 +136,7 @@ class OrthoViewer(VtkViewer):
         center = list(self.resliceCursor.GetCenter())
         center[self.orientation] = slice_index
         self.resliceCursor.SetCenter(center)
-
+        
         self.resliceCursor.Update()
         for i in range(0,3):
             self.commandSliceSelect.imagePlaneWidgets[i].UpdatePlacement()
@@ -118,3 +155,30 @@ class OrthoViewer(VtkViewer):
     # Events
     def add_observers(self):
         self.resliceCursorWidget.AddObserver(vtk.vtkResliceCursorWidget.ResliceAxesChangedEvent, self.commandSliceSelect)
+
+    # def changeSizeEvent2(self, obj, event):
+    #     print("changeSizeEvent2")
+    #     for item in self.labels:
+    #         textActor = item[0]
+    #         position = item[1]
+            
+    #         windowSize = self.GetRenderWindow().GetSize()
+    #         TextLength = len(textActor.GetInput())
+
+    #         xPos, yPos = 0, 0
+    #         if position[0] == 0:
+    #             xPos = 1/2*windowSize[0] - 4
+    #         elif position[0] < 0:
+    #             xPos = windowSize[0] + position[0]
+    #         else:
+    #             xPos = position[0]
+
+    #         if position[1] == 0:
+    #             yPos = 1/2*windowSize[1] - 10
+    #         elif position[1] < 0:
+    #             yPos = windowSize[1] + position[1]
+    #         else:
+    #             yPos = position[1]
+
+    #         print(textActor.GetInput(), xPos, yPos)
+    #         textActor.SetPosition(xPos, yPos)

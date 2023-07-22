@@ -57,10 +57,10 @@ class VtkBase():
         self.picker.SetTolerance(0.05)
         
         ## Property
-        self.property = vtk.vtkProperty()
+        self.property = vtkProperty()
 
         ## Image Reslice
-        self.resliceCursor = vtk.vtkResliceCursor()
+        self.resliceCursor = vtkResliceCursor()
         self.resliceCursor.SetThickMode(0)
         self.resliceCursor.SetImage(self.imageBlend.GetOutput())
         self.resliceCursor.SetCenter(self.imageBlend.GetOutput().GetCenter())

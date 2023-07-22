@@ -41,7 +41,6 @@ class VtkViewer(QVTKRenderWindowInteractor):
         ## Render Window
         self.renderWindow = self.GetRenderWindow()
         self.renderWindow.SetMultiSamples(0)
-        self.renderWindow.AddObserver(vtkCommand.ModifiedEvent, self.changeSizeEvent)
         self.renderWindow.AddRenderer(self.renderer)
                 
         ## Interactor
@@ -51,6 +50,8 @@ class VtkViewer(QVTKRenderWindowInteractor):
         self.labelTextActor = vtkTextActor() 
         s = f"{self.label}"
         self.labelTextActor.SetInput(s)
+        self.labelTextActor.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
+        self.labelTextActor.GetPositionCoordinate().SetValue(0.7, 0.87)
         self.renderer.AddActor2D(self.labelTextActor)
 
         # Render 
@@ -72,16 +73,10 @@ class VtkViewer(QVTKRenderWindowInteractor):
         self.imageShiftScale.UpdateWholeExtent()
         self.imageWindowLevel.UpdateWholeExtent()
         self.imageBlend.UpdateWholeExtent()
+        self.GetRenderWindow().Modified()
         self.renderer.ResetCamera()
-        
-          
+
     # Render       
     def render(self):
         self.update()
         self.GetRenderWindow().Render()
-
-    # Events
-    def changeSizeEvent(self, obj, event):
-        windowSize = self.GetRenderWindow().GetSize()
-        TextLength = len(self.label)
-        self.labelTextActor.SetPosition(windowSize[0]-TextLength*7.5, windowSize[1]-28)
