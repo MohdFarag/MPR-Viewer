@@ -11,15 +11,16 @@ from QtViewer import *
 class QtOrthoViewer(QtViewer):
 
     # Constructor
-    def __init__(self, orientation):
+    def __init__(self, vtkBaseClass, orientation, label:str="Orthogonal Viewer"):
         super(QtOrthoViewer, self).__init__()
 
         # Properties
         self.orientation = orientation
         self.status = False
+        self.label = label
         
         ## Render Viewer
-        self.viewer = OrthoViewer(self.orientation)
+        self.viewer = OrthoViewer(vtkBaseClass, self.orientation, self.label)
 
         # Initialize the UI        
         self._init_UI()
@@ -41,6 +42,7 @@ class QtOrthoViewer(QtViewer):
         self.slider.setSingleStep(1)
         self.slider.setValue(0)
         self.slider.setEnabled(False)
+        self.viewer.commandSliceSelect.sliders[self.orientation] = self.slider
         
         ## Buttons
         self.buttonsLayout = QHBoxLayout()
@@ -76,18 +78,12 @@ class QtOrthoViewer(QtViewer):
         self.slider.valueChanged.connect(self.update_slice)
         
         # Connect buttons to slots
-        self.prevBtn.clicked.connect(lambda: self.update_slice(self.slider.value()-10))
-        self.playBtn.clicked.connect(self.playPauseBtn)
-        self.nextBtn.clicked.connect(lambda: self.update_slice(self.slider.value()+10))
+        self.prevBtn.clicked.connect(lambda: self.next_prev_btn(self.slider.value()-10))
+        self.playBtn.clicked.connect(self.play_pause_btn)
+        self.nextBtn.clicked.connect(lambda: self.next_prev_btn(self.slider.value()+10))
 
     # Update slice
     def update_slice(self, slice_index):
-        if slice_index < self.slider.minimum():
-            slice_index = self.slider.minimum()
-        elif slice_index > self.slider.maximum():
-            slice_index = self.slider.maximum()
-
-        self.slider.setValue(slice_index)
         self.viewer.set_slice(slice_index)
 
     # Connect on data
@@ -104,9 +100,19 @@ class QtOrthoViewer(QtViewer):
         self.slider.setMinimum(self.viewer.min_slice)
         self.slider.setMaximum(self.viewer.max_slice)
         self.slider.setValue((self.slider.maximum() + self.slider.minimum())//2)
-
+    
+    # Next/Previous button function
+    def next_prev_btn(self, slice_index):
+        if slice_index < self.slider.minimum():
+            slice_index = self.slider.minimum()
+        elif slice_index > self.slider.maximum():
+            slice_index = self.slider.maximum()
+            
+        self.slider.setValue(slice_index)
+        self.viewer.set_slice(slice_index)
+        
     # Play slices            
-    def playSlices(self):
+    def play_slices(self):
         self.thread = QThread()
         self.worker = Worker(self.slider)
         self.status = True
@@ -119,7 +125,7 @@ class QtOrthoViewer(QtViewer):
         self.worker.moveToThread(self.thread)
         
         # Connect signals and slots
-        self.thread.started.connect(self.worker.run)
+        self.thread.started.connect(self.worker.play)
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
@@ -132,18 +138,18 @@ class QtOrthoViewer(QtViewer):
             lambda: self.slider.setHidden(False)
         )
         self.thread.finished.connect(
-            self.pauseSlices
+            self.pause_slices
         )
 
     # Pause slices
-    def pauseSlices(self):
+    def pause_slices(self):
         self.playBtn.setIcon(QIcon("./assets/play.ico"))
         self.worker.pause()
         self.status = False
 
     # Play/Pause button function    
-    def playPauseBtn(self):
+    def play_pause_btn(self):
         if self.status == False:
-            self.playSlices()
+            self.play_slices()
         else:
-            self.pauseSlices()
+            self.pause_slices()

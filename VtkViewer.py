@@ -1,113 +1,82 @@
 # ignore pylint
 # pylint: disable-msg=E0611,E0602
 import numpy as np
+from VtkBase import VtkBase
 
 from vtk import *
 import vtk.qt
 vtk.qt.QVTKRWIBase = "QGLWidget"
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
-SLICE_ORIENTATION_YZ  = 0
-SLICE_ORIENTATION_XZ  = 1
-SLICE_ORIENTATION_XY  = 2
+SLICE_ORIENTATION_YZ  = vtk.vtkResliceImageViewer.SLICE_ORIENTATION_YZ
+SLICE_ORIENTATION_XZ  = vtk.vtkResliceImageViewer.SLICE_ORIENTATION_XZ
+SLICE_ORIENTATION_XY  = vtk.vtkResliceImageViewer.SLICE_ORIENTATION_XY
 
 class VtkViewer(QVTKRenderWindowInteractor):
 
-    def __init__(self, label):
+    # Constructor
+    def __init__(self, label:str, vtkBaseClass:VtkBase):
         super(VtkViewer, self).__init__()
         
         # Properties
         self.label = label
+        self.vtkBaseClass = vtkBaseClass
         
-        # Vtk Stuff        
+        # Vtk Stuff
         ## Reader
-        self.imageReader = vtkMetaImageReader()
-        temp_path = "./temp/out.mhd"
-        self.imageReader.SetFileName(temp_path) 
-        self.imageReader.UpdateWholeExtent()
-        slicesRange = self.imageReader.GetOutput().GetScalarRange()
+        self.imageReader = self.vtkBaseClass.imageReader
 
-        ## Filters
-        ### Image Shift Scale
-        self.imageShiftScale = vtkImageShiftScale()
-        self.imageShiftScale.SetInputData(self.imageReader.GetOutput())
-        self.imageShiftScale.SetOutputScalarTypeToUnsignedChar()
-        self.imageShiftScale.SetShift(-float(slicesRange[0]))
-        self.imageShiftScale.UpdateWholeExtent()
+        ## Image Shift Scale
+        self.imageShiftScale = self.vtkBaseClass.imageShiftScale
         
-        ### Image Window Level
-        self.imageWindowLevel = vtkImageMapToWindowLevelColors()
-        self.imageWindowLevel.SetInputConnection(self.imageShiftScale.GetOutputPort())
-        self.imageWindowLevel.SetWindow(100.0)
-        self.imageWindowLevel.SetLevel(50.0)
-        self.imageWindowLevel.UpdateWholeExtent()
-
-        # Image Blend
-        self.imageBlend = vtkImageBlend()
+        ## Image Window Level
+        self.imageWindowLevel = self.vtkBaseClass.imageWindowLevel
         
-        # Image Reslice
-        self.imageReslice = vtkImageReslice()
+        ## Image Blend
+        self.imageBlend = self.vtkBaseClass.imageBlend
         
         ## Renderer
         self.renderer = vtkRenderer()
-        self.renderer.SetBackground(9/255,10/255, 9/255)
-        # self.renderer.GetActiveCamera().SetParallelProjection(1)
         
-        self.labelTextActor = vtkTextActor() 
-        self.renderer.AddActor2D(self.labelTextActor)
-        s = f"{self.label}"
-        self.labelTextActor.SetInput(s)
-
         ## Render Window
         self.renderWindow = self.GetRenderWindow()
-        self.renderWindow.AddObserver(vtkCommand.ModifiedEvent, self.changeSizeEvent)
+        self.renderWindow.SetMultiSamples(0)
         self.renderWindow.AddRenderer(self.renderer)
+                
+        ## Interactor
+        self.renderWindowInteractor = self.renderWindow.GetInteractor()
         
-        self.GetRenderWindow().Render()
+        ## Label Text Actor
+        self.labelTextActor = vtkTextActor() 
+        s = f"{self.label}"
+        self.labelTextActor.SetInput(s)
+        self.labelTextActor.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
+        self.labelTextActor.GetPositionCoordinate().SetValue(0.7, 0.87)
+        self.renderer.AddActor2D(self.labelTextActor)
 
-    def xxxx(self,obj, event):
-        print(self.imagePlaneWidget.GetCursorData())
-    
+        # Render 
+        self.render()
+
+    # Destructor
     def closeEvent(self, QCloseEvent):
         super().closeEvent(QCloseEvent)
         self.renderer.FastDelete()
         self.Finalize()
-                  
+
+    # Connect on data
     def connect_on_data(self, path:str):
         if path == "":
             return
-
-        self.imageReader.SetFileName(path)
+    
+    def update(self):
         self.imageReader.UpdateWholeExtent()
-        slicesRange = self.imageReader.GetOutput().GetScalarRange()
-        
-        ## Image Shift Scale
-        self.imageShiftScale.SetShift(-float(slicesRange[0]))
-        self.imageShiftScale.SetScale(255.0/(float(slicesRange[1]-slicesRange[0])))
         self.imageShiftScale.UpdateWholeExtent()
-
-        ### Image Window Level
-        self.imageWindowLevel.SetWindow(100.0)
-        self.imageWindowLevel.SetLevel(50.0)
         self.imageWindowLevel.UpdateWholeExtent()
-     
-    def render(self):
+        self.imageBlend.UpdateWholeExtent()
+        self.GetRenderWindow().Modified()
         self.renderer.ResetCamera()
-        self.GetRenderWindow().Render()
 
-    def changeSizeEvent(self, obj, event):
-        windowSize = self.GetRenderWindow().GetSize()
-        self.labelTextActor.SetPosition(windowSize[0]-150,windowSize[1]-30)
-            
-    # Events
-    def fun1(self, obj, event):
-        print("fun1")
-    
-    def fun2(self, obj, event):
-        print("fun2")
-    
-    def fun3(self, obj, event):
-        print("fun3")
-        
-    def fun4(self, obj, event):
-        print("fun4")
+    # Render       
+    def render(self):
+        self.update()
+        self.GetRenderWindow().Render()

@@ -15,8 +15,8 @@ class Worker(QObject):
         self.slider = slider
         self._isRunning = True
 
-    def run(self):
-        """Long-running task."""
+    # Play the worker thread
+    def play(self):
         if not self._isRunning :
             self._isRunning = True
 
@@ -25,14 +25,15 @@ class Worker(QObject):
         while i <= slider_max:
             if self._isRunning:
                 self.progress.emit(i)
-                time.sleep(0.0001)
+                time.sleep(0.01)
             else:
                 break
             
             i += 1
 
-        self.slider.setValue(i)
+        self.slider.setValue(i) # Set the slider to the last value
         self.finished.emit()
-        
+    
+    # Pause the worker thread        
     def pause(self):
         self._isRunning = False

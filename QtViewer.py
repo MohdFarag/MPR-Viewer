@@ -31,7 +31,7 @@ class QtViewer(QWidget):
         pass
 
     # Getters and setters
-    def getViewer(self):
+    def get_viewer(self):
         return self.viewer
     
     # Connect on data    
