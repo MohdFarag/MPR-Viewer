@@ -5,29 +5,38 @@ import numpy as np
 from vtk import *
 from VtkViewer import *
 
+# Segmentation Viewer
 class SegmentationViewer(VtkViewer):
 
     # Constructor
-    def __init__(self, vtkBaseClass:VtkBase, other_viewers=None, label:str="Segmentation Viewer"):
-        super(SegmentationViewer, self).__init__(label=label, vtkBaseClass=vtkBaseClass)
+    def __init__(self, vtkBaseClass:VtkBase, label:str="Segmentation Viewer"):
+        super(SegmentationViewer, self).__init__(label=label, vtkBaseClass=vtkBaseClass)                           
         
-        # Properties
-        self.other_viewers = other_viewers
-                       
-        # Vtk Stuff
-        ## Segmentation
-        for viewer in self.other_viewers:
-            imageActorOrtho = vtkImageActor()
-            imageActorOrtho.SetInputData(viewer.imageReslice.GetOutput())
-            imageActorOrtho.SetUserMatrix(viewer.imageReslice.GetResliceAxes())
-            self.renderer.AddActor(imageActorOrtho)
+        self.picker = self.vtkBaseClass.picker
+        self.property = self.vtkBaseClass.property
+        self.imagePlaneWidgets = [vtkImagePlaneWidget(), vtkImagePlaneWidget(), vtkImagePlaneWidget()]
+
+        for imagePlaneWidget in self.imagePlaneWidgets:
+            imagePlaneWidget.SetInteractor(self.renderWindowInteractor)
+            imagePlaneWidget.SetInputData(self.vtkBaseClass.imageBlend.GetOutput())
+            imagePlaneWidget.SetDefaultRenderer(self.renderer)
+            imagePlaneWidget.SetPicker(self.picker)
+            imagePlaneWidget.RestrictPlaneToVolumeOn()
+            imagePlaneWidget.SetTexturePlaneProperty(self.property)
+            imagePlaneWidget.TextureInterpolateOff()
+            imagePlaneWidget.SetResliceInterpolateToLinear()
+            imagePlaneWidget.DisplayTextOn()
+            imagePlaneWidget.On()
+            imagePlaneWidget.InteractionOn()
             
+        ## Renderer
+        self.renderer.SetBackground(0.05, 0.05, 0.05)
+        self.renderer.GetActiveCamera().Elevation(110)
+        self.renderer.GetActiveCamera().SetViewUp(0, 0, -1)
+        self.renderer.GetActiveCamera().Azimuth(45)
+        self.renderer.GetActiveCamera().Dolly(1.15)
+        self.renderer.ResetCameraClippingRange()
+
     # Connect on data
     def connect_on_data(self, path:str):
         super().connect_on_data(path)
-        
-        for viewer in self.other_viewers:
-            imageActorOrtho = vtkImageActor()
-            imageActorOrtho.SetInputData(viewer.imageReslice.GetOutput())
-            imageActorOrtho.SetUserMatrix(viewer.imageReslice.GetResliceAxes())
-            self.renderer.AddActor(imageActorOrtho)

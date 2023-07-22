@@ -14,6 +14,7 @@ SLICE_ORIENTATION_XY  = vtk.vtkResliceImageViewer.SLICE_ORIENTATION_XY
 
 class VtkViewer(QVTKRenderWindowInteractor):
 
+    # Constructor
     def __init__(self, label:str, vtkBaseClass:VtkBase):
         super(VtkViewer, self).__init__()
         
@@ -21,52 +22,64 @@ class VtkViewer(QVTKRenderWindowInteractor):
         self.label = label
         self.vtkBaseClass = vtkBaseClass
         
-        # Vtk Stuff        
+        # Vtk Stuff
         ## Reader
         self.imageReader = self.vtkBaseClass.imageReader
 
-        ## Filters
-        ### Image Shift Scale
+        ## Image Shift Scale
         self.imageShiftScale = self.vtkBaseClass.imageShiftScale
         
-        ### Image Window Level
+        ## Image Window Level
         self.imageWindowLevel = self.vtkBaseClass.imageWindowLevel
         
-        # Image Blend
+        ## Image Blend
         self.imageBlend = self.vtkBaseClass.imageBlend
-        
-        # Image Reslice
-        self.imageReslice = vtkImageReslice()
         
         ## Renderer
         self.renderer = vtkRenderer()
-                
-        # Label Text Actor
-        self.labelTextActor = vtkTextActor() 
-        self.renderer.AddActor2D(self.labelTextActor)
-        s = f"{self.label}"
-        self.labelTextActor.SetInput(s)
-
+        
         ## Render Window
         self.renderWindow = self.GetRenderWindow()
+        self.renderWindow.SetMultiSamples(0)
         self.renderWindow.AddObserver(vtkCommand.ModifiedEvent, self.changeSizeEvent)
         self.renderWindow.AddRenderer(self.renderer)
                 
-        self.Render()
+        ## Interactor
+        self.renderWindowInteractor = self.renderWindow.GetInteractor()
+        
+        ## Label Text Actor
+        self.labelTextActor = vtkTextActor() 
+        s = f"{self.label}"
+        self.labelTextActor.SetInput(s)
+        self.renderer.AddActor2D(self.labelTextActor)
 
+        # Render 
+        self.render()
+
+    # Destructor
     def closeEvent(self, QCloseEvent):
         super().closeEvent(QCloseEvent)
         self.renderer.FastDelete()
         self.Finalize()
-    
+
+    # Connect on data
     def connect_on_data(self, path:str):
         if path == "":
             return
-             
-    def Render(self):
+    
+    def update(self):
+        self.imageReader.UpdateWholeExtent()
+        self.imageShiftScale.UpdateWholeExtent()
+        self.imageWindowLevel.UpdateWholeExtent()
+        self.imageBlend.UpdateWholeExtent()
         self.renderer.ResetCamera()
+          
+    # Render       
+    def render(self):
+        self.update()
         self.GetRenderWindow().Render()
 
+    # Events
     def changeSizeEvent(self, obj, event):
         windowSize = self.GetRenderWindow().GetSize()
         self.labelTextActor.SetPosition(windowSize[0]-150,windowSize[1]-30)
