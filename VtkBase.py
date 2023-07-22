@@ -1,6 +1,5 @@
 
 from vtk import *
-from VtkAdditions import *
 from CommandSliceSelect import *
 
 class VtkBase():

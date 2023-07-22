@@ -1,10 +1,6 @@
-# ignore pylint
-# pylint: disable-msg=E0611,E0602
-import numpy as np
-
+# VTK
 from vtk import *
 from VtkViewer import *
-from VtkAdditions import *
 from CommandSliceSelect import *
 
 class OrthoViewer(VtkViewer):

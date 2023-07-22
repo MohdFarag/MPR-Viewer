@@ -1,11 +1,14 @@
+# PyQt5
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QFileDialog
 
-from QtOrthoViewer import QtOrthoViewer, SLICE_ORIENTATION_XY, SLICE_ORIENTATION_XZ, SLICE_ORIENTATION_YZ
+# VTK
+from QtOrthoViewer import *
 from QtSegmentationViewer import QtSegmentationViewer
 from VtkBase import VtkBase
 from ViewersConnection import ViewersConnection
 
+# Main Window
 class MainWindow(QtWidgets.QMainWindow):
     
     # Constructor
