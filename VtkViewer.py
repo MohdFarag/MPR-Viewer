@@ -73,6 +73,7 @@ class VtkViewer(QVTKRenderWindowInteractor):
         self.imageWindowLevel.UpdateWholeExtent()
         self.imageBlend.UpdateWholeExtent()
         self.renderer.ResetCamera()
+        
           
     # Render       
     def render(self):
@@ -82,4 +83,5 @@ class VtkViewer(QVTKRenderWindowInteractor):
     # Events
     def changeSizeEvent(self, obj, event):
         windowSize = self.GetRenderWindow().GetSize()
-        self.labelTextActor.SetPosition(windowSize[0]-150,windowSize[1]-30)
+        TextLength = len(self.label)
+        self.labelTextActor.SetPosition(windowSize[0]-TextLength*7.5, windowSize[1]-28)

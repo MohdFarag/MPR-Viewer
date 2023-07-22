@@ -14,8 +14,9 @@ class SegmentationViewer(VtkViewer):
         
         self.picker = self.vtkBaseClass.picker
         self.property = self.vtkBaseClass.property
+        
+        # Image Plane Widgets
         self.imagePlaneWidgets = [vtkImagePlaneWidget(), vtkImagePlaneWidget(), vtkImagePlaneWidget()]
-
         for imagePlaneWidget in self.imagePlaneWidgets:
             imagePlaneWidget.SetInteractor(self.renderWindowInteractor)
             imagePlaneWidget.SetInputData(self.vtkBaseClass.imageBlend.GetOutput())
@@ -29,7 +30,7 @@ class SegmentationViewer(VtkViewer):
             imagePlaneWidget.On()
             imagePlaneWidget.InteractionOn()
             
-        ## Renderer
+        ## Renderer Settings
         self.renderer.SetBackground(0.05, 0.05, 0.05)
         self.renderer.GetActiveCamera().Elevation(110)
         self.renderer.GetActiveCamera().SetViewUp(0, 0, -1)

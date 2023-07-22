@@ -23,7 +23,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.QtSagittalOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_YZ, "Sagittal Plane - YZ")
         self.QtCoronalOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XZ, "Coronal Plane - XZ")
         self.QtAxialOrthoViewer = QtOrthoViewer(self.vtkBaseClass, SLICE_ORIENTATION_XY, "Axial Plane - XY")
-        self.QtSegmentationViewer = QtSegmentationViewer(self.vtkBaseClass, label="Segmentation Viewer")
+        self.QtSegmentationViewer = QtSegmentationViewer(self.vtkBaseClass, label="3D Viewer")
         
         self.ViewersConnection = ViewersConnection(self.vtkBaseClass)
         self.ViewersConnection.add_orthogonal_viewer(self.QtSagittalOrthoViewer.get_viewer())
