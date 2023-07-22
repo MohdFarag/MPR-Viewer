@@ -14,7 +14,12 @@ class OrthoViewer(VtkViewer):
         self.current_slice = 0
         self.min_slice = 0
         self.max_slice = 0
-        self.labels = []
+        self.labelsPositions = [
+            [0.05, 0.5],
+            [0.95, 0.5],
+            [0.5, 0.05],
+            [0.5, 0.9]
+        ]
                        
         # Vtk Stuff
         ### Image Window Level        
@@ -72,24 +77,14 @@ class OrthoViewer(VtkViewer):
         color[self.orientation] = 0
         self.renderer.SetBackground(color)
 
+        # Add directions text
         if self.orientation == SLICE_ORIENTATION_XY:
-            self.add_text_actor(text="R", position=[0.05, 0.5])
-            self.add_text_actor(text="L", position=[0.95, 0.5])
-            self.add_text_actor(text="A", position=[0.5, 0.05])
-            self.add_text_actor(text="P", position=[0.5, 0.9])
+            self.add_directions_text(["R", "L", "A", "P"])
         elif self.orientation == SLICE_ORIENTATION_XZ:
-            self.add_text_actor(text="R", position=[0.05, 0.5])
-            self.add_text_actor(text="L", position=[0.95, 0.5])
-            self.add_text_actor(text="I", position=[0.5, 0.05])
-            self.add_text_actor(text="S", position=[0.5, 0.9])
+            self.add_directions_text(["R", "L", "I", "S"])
         elif self.orientation == SLICE_ORIENTATION_YZ:
-            self.add_text_actor(text="A", position=[0.05, 0.5])
-            self.add_text_actor(text="P", position=[0.95, 0.5])
-            self.add_text_actor(text="I", position=[0.5, 0.05])
-            self.add_text_actor(text="S", position=[0.5, 0.9])
-    
-            # self.GetRenderWindow().AddObserver(vtkCommand.ModifiedEvent, self.changeSizeEvent2)
-                
+            self.add_directions_text(["A", "P", "I", "S"])
+                            
         # Add observers
         self.add_observers()
     
@@ -113,10 +108,13 @@ class OrthoViewer(VtkViewer):
         textActor.GetTextProperty().SetFontFamilyToTimes()
         textActor.GetTextProperty().SetBold(1)
         self.renderer.AddActor2D(textActor)
-
-        # Add to list of labels
-        self.labels.append((textActor, position))
-       
+    
+    # Add directions text
+    def add_directions_text(self, list_of_directions:list):
+        for i,direction_text in zip(range(4),list_of_directions):
+            self.add_text_actor(text=direction_text, position=self.labelsPositions[i])
+        
+           
     # Get slice range
     def get_slices_range(self):
         return self.min_slice, self.max_slice
@@ -155,30 +153,3 @@ class OrthoViewer(VtkViewer):
     # Events
     def add_observers(self):
         self.resliceCursorWidget.AddObserver(vtk.vtkResliceCursorWidget.ResliceAxesChangedEvent, self.commandSliceSelect)
-
-    # def changeSizeEvent2(self, obj, event):
-    #     print("changeSizeEvent2")
-    #     for item in self.labels:
-    #         textActor = item[0]
-    #         position = item[1]
-            
-    #         windowSize = self.GetRenderWindow().GetSize()
-    #         TextLength = len(textActor.GetInput())
-
-    #         xPos, yPos = 0, 0
-    #         if position[0] == 0:
-    #             xPos = 1/2*windowSize[0] - 4
-    #         elif position[0] < 0:
-    #             xPos = windowSize[0] + position[0]
-    #         else:
-    #             xPos = position[0]
-
-    #         if position[1] == 0:
-    #             yPos = 1/2*windowSize[1] - 10
-    #         elif position[1] < 0:
-    #             yPos = windowSize[1] + position[1]
-    #         else:
-    #             yPos = position[1]
-
-    #         print(textActor.GetInput(), xPos, yPos)
-    #         textActor.SetPosition(xPos, yPos)
