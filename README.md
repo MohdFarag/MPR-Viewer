@@ -1,6 +1,6 @@
 # MPR Viewer
 
-![Project Image](./docs/image3-copy.png)
+![Project Image](./Docs/image3-copy.png)
 
 > Multiplanar reconstruction (MPR) program that render a medical data in multi planes with different features.
 
@@ -59,11 +59,11 @@ $ python3 main.py
 
 ## Preview
 
-![Project Image](./docs/image0.png)
-![Project Image](./docs/image1.png)
-![Project Image](./docs/image2.png)
-![Project Image](./docs/image3.png)
-![Project Image](./docs/image4.png)
+![Project Image](./Docs/image0.png)
+![Project Image](./Docs/image1.png)
+![Project Image](./Docs/image2.png)
+![Project Image](./Docs/image3.png)
+![Project Image](./Docs/image4.png)
 
 [Back To The Top](#mpr-viewer)
 
