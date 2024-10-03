@@ -2,7 +2,7 @@
 
 ![Project Image](./Docs/image3-copy.png)
 
-> Multiplanar reconstruction (MPR) program that render a medical data in multi planes with different features.
+> A multi-planar reconstruction (MPR) program renders medical data in multiple planes with different features.
 
 ---
 
